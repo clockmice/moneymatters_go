@@ -1,0 +1,103 @@
+package main
+
+import "fmt"
+
+type Friend struct {
+	id int
+	owes int
+	inGroup bool
+	friends []int
+}
+
+func addFriend(friend *Friend, i int) {
+	friends := friend.friends
+	friends = append(friends, i)
+	friend.friends = friends
+}
+
+func divideInGroups(friendId int, friends *map[int]Friend, group []Friend) []Friend{
+	friend := (*friends)[friendId]
+	if friend.inGroup {
+		return nil
+	}
+	group = append(group, friend)
+	friend.inGroup = true
+	//fmt.Println(friend)
+	(*friends)[friendId] = friend
+	//fmt.Println(friends)
+	for i := 0; i < len(friend.friends); i++ {
+		divideInGroups(friend.friends[i], friends, group)
+	}
+	return group
+}
+
+func CalculateSumForFriends(groups *[][]Friend) bool {
+	for i := 0; i < len(*groups); i++ {
+		sum := 0
+		for _, friend := range (*groups)[i] {
+			sum = sum + friend.owes
+		}
+		if sum != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func isPossible (numberOfFriends int, everybody *map[int]Friend) bool {
+	groups := [][]Friend{}
+
+	for i := 0; i < numberOfFriends; i++ {
+		if friend := (*everybody)[i]; friend.inGroup {
+			continue
+		}
+		group := []Friend{}
+
+		//fmt.Println(groups)
+		group = divideInGroups(i, everybody, group)
+		groups = append(groups, group)
+		fmt.Println("Groups: ", groups)
+		fmt.Println("Everybody after: ",everybody)
+		//fmt.Println("Groups after: ", groups)
+	}
+	return CalculateSumForFriends(&groups)
+}
+
+func main() {
+	var numberOfFriends int
+	var numberOfFriendships int
+	fmt.Scan(&numberOfFriends)
+	fmt.Scan(&numberOfFriendships)
+
+	everybody := make(map[int]Friend)
+
+	for i := 0; i < numberOfFriends; i++ {
+		var debt int
+		fmt.Scan(&debt)
+		friend := Friend{id: i, owes: debt}
+		everybody[i] = friend
+	}
+
+	for i := 0; i < numberOfFriendships; i++ {
+		var first int
+		var second int
+
+		fmt.Scan(&first)
+		fmt.Scan(&second)
+
+		firstFr := everybody[first]
+		secondFr := everybody[second]
+		addFriend(&firstFr, second)
+		addFriend(&secondFr, first)
+		everybody[first] = firstFr
+		everybody[second] = secondFr
+	}
+
+	fmt.Println("Everybody before: ", everybody)
+
+	if isPossible(numberOfFriends, &everybody) {
+		fmt.Println("POSSIBLE")
+	} else {
+		fmt.Println("IMPOSSIBLE")
+	}
+}
